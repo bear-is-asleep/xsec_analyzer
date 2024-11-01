@@ -124,7 +124,7 @@ public:
 
     //MC branches
     this->mc_nu_daughter_pdg_->reserve(EVENT_SIZE);
-    
+
     //Slice branches
     // this->nu_pdg_->reserve(SLC_SIZE);
     this->topological_score_->reserve(SLC_SIZE);
@@ -136,10 +136,15 @@ public:
 
   // Helper function to set branch addresses for reading information
   // from the Event TTree
-  void set_event_branch_addresses(TTree &etree) override
+  void set_event_branch_addresses( TTree& etree, int events_entry ) override
   {
     // Number of neutrino slices identified by the SliceID.
-    SetBranchAddress(etree, "rec.nslc", &this->nslice_);
+    SetBranchAddress( etree, "rec.nslc", &this->nslice_ );
+
+    // Retrieve the current number of slices. This is needed to resize vectors
+    // used to hold variable-size array contents from the input CAF file.
+    TBranch* nslc_br = etree.GetBranch( "rec.nslc" );
+    nslc_br->GetEntry( events_entry );
 
     // Is mc
     //SetBranchAddress(etree, "rec.hdr.ismc", &this->is_mc_);
@@ -149,7 +154,9 @@ public:
     //SetBranchAddress(etree, "rec.slc.nu_pdg", &this->nu_pdg_); //error
 
     // Topological score
-    SetBranchAddress(etree, "rec.slc.nu_score", this->topological_score_->data());
+    topological_score_->resize( nslice_ );
+    SetBranchAddress( etree, "rec.slc.nu_score",
+      this->topological_score_->data() );
 
     // Reconstructed neutrino vertex position (with corrections for
     // space charge applied)
@@ -159,14 +166,14 @@ public:
 
     // // Reconstructed object counts
     // SetBranchAddress(etree, "rec.slc.reco.npfp", &this->num_pf_particles_);
-    
+
     // PFParticle properties
     //SetBranchAddress( etree, "rec.slc.reco.pfp.parent_is_primary", this->pfp_generation_->data() );
     //SetBranchAddress( etree, "rec.slc.reco.pfp.ndaughters", this->pfp_trk_daughters_count_->data() );
     //SetBranchAddress( etree, "rec.slc.reco.pfp.trackScore", this->pfp_track_score_->data() );
     //SetBranchAddress( etree, "rec.slc.reco.pfp.pdg", this->pfp_reco_pdg_->data() );
     //SetBranchAddress( etree, "rec.slc.reco.pfp.nhits", this->pfp_hits_->data() );
-    
+
     //SetBranchAddress(etree, "rec.slc.reco.pfp.trk.calo.0.nhit", this->pfp_hitsU_->data()); // U plane
     //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.calo.1.nhit", this->pfp_hitsV_->data() ); // V plane
     //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.calo.2.nhit", this->pfp_hitsY_->data() ); // Y plane
@@ -181,72 +188,72 @@ public:
     // Showers (save for all PFParticles)
     // SetBranchAddress( etree, "rec.slc.reco.pfp.id", this->shower_pfp_id_->data() );
     // -start point
-    SetBranchAddress( etree, "rec.slc.reco.pfp.shw.start.x", this->shower_startx_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.shw.start.y", this->shower_starty_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.shw.start.z", this->shower_startz_->data() );
-    // -direction
-    SetBranchAddress( etree, "rec.slc.reco.pfp.shw.dir.x", this->shower_dirx_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.shw.dir.y", this->shower_diry_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.shw.dir.z", this->shower_dirz_->data() );
-    // -other properties (still important)
-    SetBranchAddress( etree, "rec.slc.reco.pfp.shw.open_angle", this->shower_openangle_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.shw.len", this->shower_start_distance_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.shw.bestplane_energy", this->shower_energy_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.shw.bestplane_dEdx", this->shower_dEdx_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.shw.start.x", this->shower_startx_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.shw.start.y", this->shower_starty_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.shw.start.z", this->shower_startz_->data() );
+    //// -direction
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.shw.dir.x", this->shower_dirx_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.shw.dir.y", this->shower_diry_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.shw.dir.z", this->shower_dirz_->data() );
+    //// -other properties (still important)
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.shw.open_angle", this->shower_openangle_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.shw.len", this->shower_start_distance_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.shw.bestplane_energy", this->shower_energy_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.shw.bestplane_dEdx", this->shower_dEdx_->data() );
 
-    // Tracks (save for all PFParticles)
-    SetBranchAddress( etree, "rec.slc.reco.pfp.id", this->track_pfp_id_->data() );
-    // -start point
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.start.x", this->track_startx_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.start.y", this->track_starty_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.start.z", this->track_startz_->data() );
-    // -direction
-    std::vector<float>* my_temp_ptr = this->track_dirx_.get_bare_ptr();
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.dir.x", &my_temp_ptr );
-    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.dir.x", &(this->track_dirx_->data()) );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.dir.y", this->track_diry_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.dir.z", this->track_dirz_->data() );
-    // -end point
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.end.x", this->track_endx_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.end.y", this->track_endy_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.end.z", this->track_endz_->data() );
-    // -energy and momentum
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.rangeP.p_muon", this->track_range_mom_mu_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.rangeP.p_proton", this->track_range_mom_p_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.rangeP.p_pion", this->track_range_mom_pi_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.mcsP.bwdP_muon", this->track_mcs_bwd_mom_mu_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.mcsP.bwdP_proton", this->track_mcs_bwd_mom_p_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.mcsP.bwdP_pion", this->track_mcs_bwd_mom_pi_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.mcsP.fwdP_muon", this->track_mcs_fwd_mom_mu_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.mcsP.fwdP_proton", this->track_mcs_fwd_mom_p_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.mcsP.fwdP_pion", this->track_mcs_fwd_mom_pi_->data() );
+    //// Tracks (save for all PFParticles)
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.id", this->track_pfp_id_->data() );
+    //// -start point
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.start.x", this->track_startx_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.start.y", this->track_starty_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.start.z", this->track_startz_->data() );
+    //// -direction
+    //std::vector<float>* my_temp_ptr = this->track_dirx_.get_bare_ptr();
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.dir.x", &my_temp_ptr );
+    ////SetBranchAddress( etree, "rec.slc.reco.pfp.trk.dir.x", &(this->track_dirx_->data()) );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.dir.y", this->track_diry_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.dir.z", this->track_dirz_->data() );
+    //// -end point
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.end.x", this->track_endx_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.end.y", this->track_endy_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.end.z", this->track_endz_->data() );
+    //// -energy and momentum
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.rangeP.p_muon", this->track_range_mom_mu_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.rangeP.p_proton", this->track_range_mom_p_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.rangeP.p_pion", this->track_range_mom_pi_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.mcsP.bwdP_muon", this->track_mcs_bwd_mom_mu_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.mcsP.bwdP_proton", this->track_mcs_bwd_mom_p_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.mcsP.bwdP_pion", this->track_mcs_bwd_mom_pi_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.mcsP.fwdP_muon", this->track_mcs_fwd_mom_mu_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.mcsP.fwdP_proton", this->track_mcs_fwd_mom_p_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.mcsP.fwdP_pion", this->track_mcs_fwd_mom_pi_->data() );
 
-    //-chi2 PIDs
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.chi2pid.0.chi2_proton", this->track_chi2_u_proton_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.chi2pid.1.chi2_proton", this->track_chi2_v_proton_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.chi2pid.2.chi2_proton", this->track_chi2_y_proton_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.chi2pid.0.chi2_muon", this->track_chi2_u_muon_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.chi2pid.1.chi2_muon", this->track_chi2_v_muon_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.chi2pid.2.chi2_muon", this->track_chi2_y_muon_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.chi2pid.0.chi2_pion", this->track_chi2_u_pion_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.chi2pid.1.chi2_pion", this->track_chi2_v_pion_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.chi2pid.2.chi2_pion", this->track_chi2_y_pion_->data() );
+    ////-chi2 PIDs
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.chi2pid.0.chi2_proton", this->track_chi2_u_proton_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.chi2pid.1.chi2_proton", this->track_chi2_v_proton_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.chi2pid.2.chi2_proton", this->track_chi2_y_proton_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.chi2pid.0.chi2_muon", this->track_chi2_u_muon_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.chi2pid.1.chi2_muon", this->track_chi2_v_muon_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.chi2pid.2.chi2_muon", this->track_chi2_y_muon_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.chi2pid.0.chi2_pion", this->track_chi2_u_pion_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.chi2pid.1.chi2_pion", this->track_chi2_v_pion_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.chi2pid.2.chi2_pion", this->track_chi2_y_pion_->data() );
 
-    // // -other properties (still important)
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.len", this->track_length_->data() );
-    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.theta", this->track_theta_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.phi", this->track_phi_->data() );
-    SetBranchAddress( etree, "rec.slc.reco.pfp.trk.bestplane", this->track_bestplane_->data() );
+    //// // -other properties (still important)
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.len", this->track_length_->data() );
+    ////SetBranchAddress( etree, "rec.slc.reco.pfp.trk.theta", this->track_theta_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.phi", this->track_phi_->data() );
+    //SetBranchAddress( etree, "rec.slc.reco.pfp.trk.bestplane", this->track_bestplane_->data() );
 
-    // // MC truth information for the neutrino
-    SetBranchAddress(etree, "rec.mc.nu.pdg", &this->mc_nu_pdg_);
-    SetBranchAddress(etree, "rec.mc.nu.E", &this->mc_nu_energy_);
-    SetBranchAddress(etree, "rec.mc.nu.isnc", &this->mc_nu_ccnc_); // 0=CC, 1=NC
-    //SetBranchAddress(etree, "rec.mc.nu.genie_inttype", this->mc_nu_interaction_type_->data()); //error
-    SetBranchAddress(etree, "rec.mc.nu.vtx.x", &this->mc_nu_vx_);
-    SetBranchAddress(etree, "rec.mc.nu.vtx.y", &this->mc_nu_vy_);
-    SetBranchAddress(etree, "rec.mc.nu.vtx.z", &this->mc_nu_vz_);
-    // Error ends here
+    //// // MC truth information for the neutrino
+    //SetBranchAddress(etree, "rec.mc.nu.pdg", &this->mc_nu_pdg_);
+    //SetBranchAddress(etree, "rec.mc.nu.E", &this->mc_nu_energy_);
+    //SetBranchAddress(etree, "rec.mc.nu.isnc", &this->mc_nu_ccnc_); // 0=CC, 1=NC
+    ////SetBranchAddress(etree, "rec.mc.nu.genie_inttype", this->mc_nu_interaction_type_->data()); //error
+    //SetBranchAddress(etree, "rec.mc.nu.vtx.x", &this->mc_nu_vx_);
+    //SetBranchAddress(etree, "rec.mc.nu.vtx.y", &this->mc_nu_vy_);
+    //SetBranchAddress(etree, "rec.mc.nu.vtx.z", &this->mc_nu_vz_);
+    //// Error ends here
 
     // MC truth information for the final-state primary particles
     // SetBranchAddress( etree, "rec.mc.nu.prim.pdg", this->mc_nu_daughter_pdg_->data() );
@@ -306,7 +313,7 @@ public:
     //set_output_branch_address(out_tree, "pfp_hitsU", this->pfp_hitsU_->data(), create, "pfp_hitsU/I");
     //set_output_branch_address(out_tree, "pfp_hitsV", this->pfp_hitsV_->data(), create, "pfp_hitsV/I");
     //set_output_branch_address(out_tree, "pfp_hitsY", this->pfp_hitsY_->data(), create, "pfp_hitsY/I");
-    
+
     // Backtracked (MC truth) PFParticle properties
     // set_output_branch_address(out_tree, "pfp_true_pdg", this->pfp_true_pdg_->data(), create, "pfp_true_pdg/I");
     // set_output_branch_address(out_tree, "pfp_true_E", this->pfp_true_E_->data(), create, "pfp_true_E/F");

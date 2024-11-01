@@ -13,7 +13,7 @@ public:
 
   // Helper function to set branch addresses for reading information
   // from the Event TTree
-  void set_event_branch_addresses(TTree& etree) override
+  void set_event_branch_addresses(TTree& etree, int /*events_entry*/ ) override
   {
     std::cout<< "Setting branch addresses for uBooNEEvent" << std::endl;
     // Reco PDG code of primary PFParticle in slice (i.e., the neutrino
@@ -218,7 +218,7 @@ public:
 
     // If MC weights are available, prepare to store them in the output TTree
     if (!this->mc_weights_map_.empty() ) {
-      
+
       // Make separate branches for the various sets of systematic variation
       // weights in the map
       for ( auto& pair : *this->mc_weights_map_ ) {

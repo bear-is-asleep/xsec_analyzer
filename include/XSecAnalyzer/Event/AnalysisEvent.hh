@@ -160,6 +160,6 @@ public:
   // ** Reconstructed observables **
 
   // Helper function to set the branch addresses for the AnalysisEvent
-  virtual void set_event_branch_addresses(TTree& etree) = 0;
+  virtual void set_event_branch_addresses( TTree& etree, int events_entry ) = 0;
   virtual void set_event_output_branch_addresses(TTree& out_tree, bool create_them) = 0;
 };
