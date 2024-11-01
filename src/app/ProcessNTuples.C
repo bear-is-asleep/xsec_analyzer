@@ -62,7 +62,7 @@ void analyze( const std::vector< std::string >& in_file_names,
     std::cout<< "Running for MicroBooNE" << std::endl;
     events_ch.SetName( "nuselection/NeutrinoSelectionFilter" );
     subruns_ch.SetName( "nuselection/SubRun" );
-    
+
     for ( const auto& f_name : in_file_names ) {
       events_ch.Add( f_name.c_str() );
       subruns_ch.Add( f_name.c_str() );
@@ -89,7 +89,7 @@ void analyze( const std::vector< std::string >& in_file_names,
     }
   }
 
-  if (experiment == "sbnd"){
+  if ( experiment == "sbnd" ) {
     events_ch.SetName( "recTree" );
     syst_ch.SetName( "globalTree" );
 
@@ -104,7 +104,7 @@ void analyze( const std::vector< std::string >& in_file_names,
     out_tree = new TTree( "stv_tree", "STV analysis tree" );
 
     // Add syst_ch as a friend of events_ch
-    syst_ch.AddFriend(&events_ch, "events_ch");
+    syst_ch.AddFriend( &events_ch, "events_ch" );
 
     // Get the total POT from the subruns TTree. Save it in the output
     // TFile as a TParameter<float>. Real data doesn"t have this TTree,
@@ -161,11 +161,7 @@ void analyze( const std::vector< std::string >& in_file_names,
 
     // Create a new AnalysisEvent object. This will reset all analysis
     // variables for the current event.
-    std::unique_ptr<AnalysisEvent> cur_event = create_event(experiment);
-
-    // Set branch addresses for the member variables that will be read
-    // directly from the Event TTree.
-    cur_event->set_event_branch_addresses( events_ch);
+    std::unique_ptr<AnalysisEvent> cur_event = create_event( experiment );
 
     // TChain::LoadTree() returns the entry number that should be used with
     // the current TTree object, which (together with the TBranch objects
@@ -176,12 +172,16 @@ void analyze( const std::vector< std::string >& in_file_names,
     // If we've reached the end of the TChain (or encountered an I/O error),
     // then terminate the event loop
     if ( local_entry < 0 ){
-      if (events_entry == 0) {
+      if ( events_entry == 0 ) {
         std::cerr << "No entries found in input TTree. Exiting.\n";
         return;
       }
       break;
     }
+
+    // Set branch addresses for the member variables that will be read
+    // directly from the Event TTree.
+    cur_event->set_event_branch_addresses( events_ch, events_entry );
 
     // Load all of the branches for which we've called
     // TChain::SetBranchAddress() above
